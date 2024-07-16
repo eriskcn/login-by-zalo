@@ -16,6 +16,8 @@ export class AuthService {
         this.callbackUrl = this.configService.get<string>('CALLBACK_URL');
     }
 
+
+
     /**
  * Generates a random code verifier for OAuth 2.0 PKCE flow.
  *
@@ -36,7 +38,6 @@ export class AuthService {
  *
  * The code verifier should be used only once in the authorization flow.
  *
- * @see https://tools.ietf.org/html/rfc7636#section-4.1
  */
     createCodeVerifier() {
         const codeVerifier = base64url.encode(crypto.randomBytes(32));
@@ -68,7 +69,6 @@ export class AuthService {
  *
  * The code challenge should be used only once in the authorization flow.
  *
- * @see https://tools.ietf.org/html/rfc7636#section-4.3
  */
     createCodeChallenge(codeVerifier: string) {
         const hash = crypto.createHash('sha256').update(codeVerifier).digest();
@@ -96,7 +96,6 @@ export class AuthService {
  * protect against CSRF attacks. It should be stored securely and verified during
  * the callback.
  *
- * @see https://developers.zalo.me/docs/api/oauth-20/authorization-code-flow
  */
     getAuthorizationUrl(codeChallenge: string, state: string) {
         return `https://oauth.zaloapp.com/v4/permission?app_id=${this.appId}&redirect_uri=${this.callbackUrl}&code_challenge=${codeChallenge}&state=${state}`;
@@ -116,7 +115,6 @@ export class AuthService {
  *
  * @throws {Error} If the request fails or if the response status code is not 200.
  *
- * @see https://developers.zalo.me/docs/api/oauth-20/access-token
  */
     async getAccessToken(code: string, codeVerifier: string) {
         const url = 'https://oauth.zaloapp.com/v4/access_token';
@@ -132,6 +130,20 @@ export class AuthService {
                 code_verifier: codeVerifier,
             },
         });
+        return response.data;
+    }
+
+    async getUserInfo(accessToken: string) {
+        const url = 'https://graph.zalo.me/v2.0/me';
+        const response = await axios.get(url, {
+            headers: {
+                'access_token': accessToken,
+            },
+            params: {
+                fields: 'id,name,picture',
+            },
+        });
+
         return response.data;
     }
 }

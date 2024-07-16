@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Res, Req } from '@nestjs/common';
+import { Controller, Get, Query, Res, Req, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Response, Request } from 'express';
 import { Session } from 'express-session';
@@ -56,5 +56,15 @@ export class AuthController {
         req.session.codeVerifier = null;
 
         res.json(accessTokenResponse);
+    }
+
+    @Get('zalo/me')
+    async getUserInfo(@Query('access_token') accessToken: string, @Res() res: Response) {
+        try {
+            const userInfo = await this.authService.getUserInfo(accessToken);
+            res.status(HttpStatus.OK).json(userInfo);
+        } catch (error) {
+            res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
+        }
     }
 }
